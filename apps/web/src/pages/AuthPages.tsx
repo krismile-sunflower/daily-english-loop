@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, BookOpenText, CheckCircle2, GraduationCap, Repeat2, Sprout } from "lucide-react";
 import { FormEvent, type ReactNode, useState } from "react";
@@ -105,9 +105,10 @@ function LoopItem({ icon, title, detail }: { icon: ReactNode; title: string; det
 
 export function LoginPage() {
   const [email, setEmail] = useState("learner@example.com");
-  const [password, setPassword] = useState("password123");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const authConfig = useQuery({ queryKey: ["auth-config"], queryFn: api.authConfig });
   const mutation = useMutation({
     mutationFn: api.login,
     onSuccess: async (data) => {
@@ -139,12 +140,18 @@ export function LoginPage() {
           进入学习面板
           <ArrowRight className="h-4 w-4" />
         </Button>
-        <p className="text-center text-sm font-semibold text-[var(--muted)]">
-          还没有账号？{" "}
-          <Link className="text-[var(--action-strong)] hover:text-[var(--text)]" to="/register">
-            注册
-          </Link>
-        </p>
+        {authConfig.data?.registrationEnabled ? (
+          <p className="text-center text-sm font-semibold text-[var(--muted)]">
+            还没有账号？{" "}
+            <Link className="text-[var(--action-strong)] hover:text-[var(--text)]" to="/register">
+              注册
+            </Link>
+          </p>
+        ) : (
+          <p className="rounded-[18px] border border-[color:var(--hairline)] bg-white/58 px-4 py-3 text-center text-sm font-bold leading-6 text-[var(--muted)]">
+            注册暂未开放，请联系管理员创建账号。
+          </p>
+        )}
       </form>
     </AuthFrame>
   );
@@ -153,9 +160,10 @@ export function LoginPage() {
 export function RegisterPage() {
   const [name, setName] = useState("Learner");
   const [email, setEmail] = useState("learner@example.com");
-  const [password, setPassword] = useState("password123");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const authConfig = useQuery({ queryKey: ["auth-config"], queryFn: api.authConfig });
   const mutation = useMutation({
     mutationFn: api.register,
     onSuccess: async (data) => {
@@ -173,31 +181,52 @@ export function RegisterPage() {
 
   return (
     <AuthFrame title="创建学习账号" description="先选择英语水平，然后进入第一天的学习闭环。">
-      <form className="space-y-5" onSubmit={submit}>
-        <label className="block space-y-2">
-          <span className="text-sm font-extrabold text-[var(--muted)]">昵称</span>
-          <Input value={name} onChange={(event) => setName(event.target.value)} minLength={2} required />
-        </label>
-        <label className="block space-y-2">
-          <span className="text-sm font-extrabold text-[var(--muted)]">邮箱</span>
-          <Input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
-        </label>
-        <label className="block space-y-2">
-          <span className="text-sm font-extrabold text-[var(--muted)]">密码</span>
-          <Input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={8} required />
-        </label>
-        {error ? <p className="text-sm font-bold text-[var(--danger)]">{error}</p> : null}
-        <Button className="w-full" variant="primary" size="lg" disabled={mutation.isPending}>
-          注册并选择水平
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-        <p className="text-center text-sm font-semibold text-[var(--muted)]">
-          已有账号？{" "}
-          <Link className="text-[var(--action-strong)] hover:text-[var(--text)]" to="/login">
-            登录
-          </Link>
-        </p>
-      </form>
+      {authConfig.isLoading ? (
+        <div className="rounded-[24px] border border-[color:var(--hairline)] bg-white/64 p-5 text-sm font-extrabold text-[var(--muted)]">
+          正在检查注册状态
+        </div>
+      ) : authConfig.data?.registrationEnabled ? (
+        <form className="space-y-5" onSubmit={submit}>
+          <label className="block space-y-2">
+            <span className="text-sm font-extrabold text-[var(--muted)]">昵称</span>
+            <Input value={name} onChange={(event) => setName(event.target.value)} minLength={2} required />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-extrabold text-[var(--muted)]">邮箱</span>
+            <Input value={email} onChange={(event) => setEmail(event.target.value)} type="email" required />
+          </label>
+          <label className="block space-y-2">
+            <span className="text-sm font-extrabold text-[var(--muted)]">密码</span>
+            <Input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={8} required />
+          </label>
+          {error ? <p className="text-sm font-bold text-[var(--danger)]">{error}</p> : null}
+          <Button className="w-full" variant="primary" size="lg" disabled={mutation.isPending}>
+            注册并选择水平
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+          <p className="text-center text-sm font-semibold text-[var(--muted)]">
+            已有账号？{" "}
+            <Link className="text-[var(--action-strong)] hover:text-[var(--text)]" to="/login">
+              登录
+            </Link>
+          </p>
+        </form>
+      ) : (
+        <div className="space-y-5">
+          <div className="rounded-[24px] border border-[color:var(--hairline)] bg-white/64 p-5">
+            <p className="font-extrabold text-[var(--text)]">注册暂未开放</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-[var(--muted)]">
+              当前只能由管理员创建学习者账号。已有账号可以继续登录。
+            </p>
+          </div>
+          <Button className="w-full" variant="primary" size="lg" asChild>
+            <Link to="/login">
+              返回登录
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+      )}
     </AuthFrame>
   );
 }

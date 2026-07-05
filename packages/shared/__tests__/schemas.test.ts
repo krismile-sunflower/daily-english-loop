@@ -3,7 +3,9 @@ import {
   adminCreateUserInputSchema,
   adminDeleteUserResponseSchema,
   adminResetUserPasswordInputSchema,
+  adminSettingsResponseSchema,
   adminSummaryResponseSchema,
+  adminUpdateSettingsInputSchema,
   adminUpdateUserInputSchema,
   adminUsersResponseSchema,
   dashboardResponseSchema,
@@ -153,6 +155,8 @@ describe("shared schemas", () => {
     expect(adminUpdateUserInputSchema.parse({ name: "Renamed", level: "B1" }).level).toBe("B1");
     expect(adminResetUserPasswordInputSchema.parse({ password: "new-password123" }).password).toBe("new-password123");
     expect(adminDeleteUserResponseSchema.parse({ ok: true, userId: "u1" }).ok).toBe(true);
+    expect(adminSettingsResponseSchema.parse({ settings: { registrationEnabled: false } }).settings.registrationEnabled).toBe(false);
+    expect(adminUpdateSettingsInputSchema.parse({ registrationEnabled: true }).registrationEnabled).toBe(true);
     expect(() => adminUpdateUserInputSchema.parse({})).toThrow();
   });
 });

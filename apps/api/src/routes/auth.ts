@@ -1,5 +1,6 @@
 import {
   authResponseSchema,
+  authConfigResponseSchema,
   loginInputSchema,
   meResponseSchema,
   registerInputSchema,
@@ -14,6 +15,7 @@ import { createSessionToken, verifySessionToken } from "../auth/session";
 import { requireAuth, type AuthVariables } from "../auth/middleware";
 import { db } from "../db/client";
 import { users } from "../db/schema";
+import { getAppSettings, getRegistrationEnabled } from "../services/settings";
 import { ApiError, parseJson } from "../utils/http";
 import { toPublicUser } from "./helpers";
 
@@ -27,7 +29,15 @@ const cookieOptions = {
 
 export const authRoutes = new Hono<{ Variables: AuthVariables }>();
 
+authRoutes.get("/config", async (c) => {
+  return c.json(authConfigResponseSchema.parse(await getAppSettings()));
+});
+
 authRoutes.post("/register", async (c) => {
+  if (!(await getRegistrationEnabled())) {
+    throw new ApiError(403, "REGISTRATION_DISABLED", "Registration is currently disabled.");
+  }
+
   const input = await parseJson(c, registerInputSchema);
   const normalizedEmail = input.email.toLowerCase();
 

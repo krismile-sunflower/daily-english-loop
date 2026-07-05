@@ -11,6 +11,12 @@ export const users = sqliteTable("users", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`)
 });
 
+export const systemSettings = sqliteTable("system_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`)
+});
+
 export const vocabularyItems = sqliteTable(
   "vocabulary_items",
   {
@@ -200,6 +206,7 @@ export const lessonRelations = relations(lessons, ({ many }) => ({
 }));
 
 export type UserRow = typeof users.$inferSelect;
+export type SystemSettingRow = typeof systemSettings.$inferSelect;
 export type VocabularyItemRow = typeof vocabularyItems.$inferSelect;
 export type VocabularyProgressRow = typeof userVocabularyProgress.$inferSelect;
 export type VocabularyPronunciationRow = typeof vocabularyPronunciations.$inferSelect;

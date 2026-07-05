@@ -53,6 +53,7 @@ export function AdminPage() {
   const [dialog, setDialog] = useState<AccountDialog>(null);
 
   const summary = useQuery({ queryKey: ["admin", "summary"], queryFn: api.adminSummary });
+  const settings = useQuery({ queryKey: ["admin", "settings"], queryFn: api.adminSettings });
   const users = useQuery({
     queryKey: ["admin", "users", { query, role, level, page, pageSize }],
     queryFn: () =>
@@ -100,6 +101,13 @@ export function AdminPage() {
       await refreshAdminData();
     }
   });
+  const updateSettings = useMutation({
+    mutationFn: api.updateAdminSettings,
+    onSuccess: async (data) => {
+      queryClient.setQueryData(["admin", "settings"], data);
+      await queryClient.invalidateQueries({ queryKey: ["auth-config"] });
+    }
+  });
 
   useEffect(() => {
     setPage(1);
@@ -140,6 +148,14 @@ export function AdminPage() {
             <MetricCard icon={Dumbbell} label="练习" value={totals?.exercises ?? 0} tone="accent" />
           </div>
         )}
+
+        <RegistrationSettingsCard
+          enabled={settings.data?.settings.registrationEnabled ?? false}
+          loading={settings.isLoading}
+          busy={updateSettings.isPending}
+          errorMessage={updateSettings.error instanceof ApiClientError ? updateSettings.error.message : null}
+          onToggle={(registrationEnabled) => updateSettings.mutate({ registrationEnabled })}
+        />
 
         <Card className="overflow-hidden bg-white/82">
           <CardHeader className="border-b border-[color:var(--hairline)] bg-[var(--surface-1)]">
@@ -601,6 +617,52 @@ function LevelSelect({ value, onChange }: { value: EnglishLevel | ""; onChange: 
       <option value="B2">B2</option>
       <option value="C1">C1</option>
     </Select>
+  );
+}
+
+function RegistrationSettingsCard({
+  enabled,
+  loading,
+  busy,
+  errorMessage,
+  onToggle
+}: {
+  enabled: boolean;
+  loading: boolean;
+  busy: boolean;
+  errorMessage: string | null;
+  onToggle: (enabled: boolean) => void;
+}) {
+  return (
+    <Card className="bg-white/82">
+      <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--action-soft)] text-[var(--action-strong)]">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-base font-extrabold text-[var(--text)]">注册入口</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-[var(--muted)]">
+                默认关闭。关闭后用户不能自助注册，管理员仍可在后台创建学习者账号。
+              </p>
+            </div>
+            <Badge className={enabled ? "text-[var(--accent-light)]" : "text-[var(--muted)]"}>
+              {loading ? "检查中" : enabled ? "已开放" : "已关闭"}
+            </Badge>
+          </div>
+          {errorMessage ? <p className="mt-3 text-sm font-bold text-[var(--danger)]">{errorMessage}</p> : null}
+        </div>
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          <Button variant={enabled ? "secondary" : "primary"} disabled={loading || busy || enabled} onClick={() => onToggle(true)}>
+            开放注册
+          </Button>
+          <Button variant={enabled ? "danger" : "secondary"} disabled={loading || busy || !enabled} onClick={() => onToggle(false)}>
+            关闭注册
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

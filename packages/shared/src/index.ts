@@ -49,6 +49,14 @@ export const authResponseSchema = z.object({
 });
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 
+export const appSettingsSchema = z.object({
+  registrationEnabled: z.boolean()
+});
+export type AppSettings = z.infer<typeof appSettingsSchema>;
+
+export const authConfigResponseSchema = appSettingsSchema;
+export type AuthConfigResponse = z.infer<typeof authConfigResponseSchema>;
+
 export const meResponseSchema = z.object({
   user: userSchema.nullable()
 });
@@ -302,6 +310,16 @@ export const adminDeleteUserResponseSchema = z.object({
   userId: z.string()
 });
 export type AdminDeleteUserResponse = z.infer<typeof adminDeleteUserResponseSchema>;
+
+export const adminSettingsResponseSchema = z.object({
+  settings: appSettingsSchema
+});
+export type AdminSettingsResponse = z.infer<typeof adminSettingsResponseSchema>;
+
+export const adminUpdateSettingsInputSchema = z.object({
+  registrationEnabled: z.boolean()
+});
+export type AdminUpdateSettingsInput = z.infer<typeof adminUpdateSettingsInputSchema>;
 
 export const apiErrorSchema = z.object({
   error: z.object({

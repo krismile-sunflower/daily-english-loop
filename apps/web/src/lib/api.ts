@@ -4,10 +4,13 @@ import type {
   AdminDeleteUserResponse,
   AdminResetUserPasswordInput,
   AdminResetUserPasswordResponse,
+  AdminSettingsResponse,
+  AdminUpdateSettingsInput,
   AdminSummaryResponse,
   AdminUpdateUserInput,
   AdminUpdateUserResponse,
   AdminUsersResponse,
+  AuthConfigResponse,
   AuthResponse,
   DashboardResponse,
   Lesson,
@@ -63,6 +66,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  authConfig() {
+    return request<AuthConfigResponse>("/auth/config");
+  },
   register(input: RegisterInput) {
     return request<AuthResponse>("/auth/register", {
       method: "POST",
@@ -149,6 +155,15 @@ export const api = {
   },
   adminSummary() {
     return request<AdminSummaryResponse>("/admin/summary");
+  },
+  adminSettings() {
+    return request<AdminSettingsResponse>("/admin/settings");
+  },
+  updateAdminSettings(input: AdminUpdateSettingsInput) {
+    return request<AdminSettingsResponse>("/admin/settings", {
+      method: "PATCH",
+      body: JSON.stringify(input)
+    });
   },
   adminUsers(params?: { q?: string; role?: string; level?: string; page?: number; pageSize?: number }) {
     const query = new URLSearchParams();

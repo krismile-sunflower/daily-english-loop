@@ -57,7 +57,21 @@ async function loginAdminUser(email = "admin@example.com", password = "admin-pas
   return cookieFrom(loginResponse);
 }
 
+async function setRegistrationEnabled(registrationEnabled: boolean) {
+  const adminCookie = await loginAdminUser();
+  const response = await app.request("/api/admin/settings", {
+    method: "PATCH",
+    headers: { "content-type": "application/json", cookie: adminCookie },
+    body: JSON.stringify({ registrationEnabled })
+  });
+  expect(response.status).toBe(200);
+  const payload = await json(response);
+  expect((payload.settings as { registrationEnabled: boolean }).registrationEnabled).toBe(registrationEnabled);
+  return adminCookie;
+}
+
 async function registerLearner(level?: string) {
+  await setRegistrationEnabled(true);
   userCounter += 1;
   const registerResponse = await app.request("/api/auth/register", {
     method: "POST",
@@ -113,7 +127,37 @@ afterAll(() => {
 });
 
 describe("api learning loop", () => {
+  it("disables public registration by default and lets admins toggle it", async () => {
+    const configResponse = await app.request("/api/auth/config");
+    expect(configResponse.status).toBe(200);
+    const configPayload = await json(configResponse);
+    expect(configPayload.registrationEnabled).toBe(false);
+
+    const blockedRegister = await app.request("/api/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: `blocked-${Date.now()}@example.com`,
+        name: "Blocked Learner",
+        password: "password123"
+      })
+    });
+    expect(blockedRegister.status).toBe(403);
+
+    const learnerCookie = await loginDemoUser();
+    const learnerSettings = await app.request("/api/admin/settings", { headers: { cookie: learnerCookie } });
+    expect(learnerSettings.status).toBe(403);
+
+    await setRegistrationEnabled(true);
+    const enabledConfigResponse = await app.request("/api/auth/config");
+    const enabledConfig = await json(enabledConfigResponse);
+    expect(enabledConfig.registrationEnabled).toBe(true);
+
+    await setRegistrationEnabled(false);
+  });
+
   it("registers, updates level, reviews vocabulary, completes a lesson, practices, and updates dashboard", async () => {
+    await setRegistrationEnabled(true);
     const registerResponse = await app.request("/api/auth/register", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -327,6 +371,7 @@ describe("api learning loop", () => {
     const oldName = process.env.ADMIN_NAME;
     const email = `seed-admin-${Date.now()}@example.com`;
 
+    await setRegistrationEnabled(true);
     const registerResponse = await app.request("/api/auth/register", {
       method: "POST",
       headers: { "content-type": "application/json" },

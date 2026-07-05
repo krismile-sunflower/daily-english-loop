@@ -4,7 +4,9 @@ import {
   adminDeleteUserResponseSchema,
   adminResetUserPasswordInputSchema,
   adminResetUserPasswordResponseSchema,
+  adminSettingsResponseSchema,
   adminSummaryResponseSchema,
+  adminUpdateSettingsInputSchema,
   adminUpdateUserInputSchema,
   adminUpdateUserResponseSchema,
   adminUsersQuerySchema,
@@ -17,12 +19,23 @@ import { requireAdmin, type AuthVariables } from "../auth/middleware";
 import { hashPassword } from "../auth/password";
 import { db } from "../db/client";
 import { dailyProgress, exercises, lessons, users, type UserRow, vocabularyItems } from "../db/schema";
+import { getAppSettings, setRegistrationEnabled } from "../services/settings";
 import { ApiError, parseJson, todayKey } from "../utils/http";
 import { toPublicUser } from "./helpers";
 
 export const adminRoutes = new Hono<{ Variables: AuthVariables }>();
 
 adminRoutes.use("*", requireAdmin);
+
+adminRoutes.get("/settings", async (c) => {
+  return c.json(adminSettingsResponseSchema.parse({ settings: await getAppSettings() }));
+});
+
+adminRoutes.patch("/settings", async (c) => {
+  const input = await parseJson(c, adminUpdateSettingsInputSchema);
+  const settings = await setRegistrationEnabled(input.registrationEnabled);
+  return c.json(adminSettingsResponseSchema.parse({ settings }));
+});
 
 adminRoutes.get("/summary", async (c) => {
   const [userTotal] = await db.select({ value: sql<number>`count(*)` }).from(users);

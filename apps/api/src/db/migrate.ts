@@ -11,6 +11,11 @@ const statements = [
     role TEXT NOT NULL DEFAULT 'learner',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
+  `CREATE TABLE IF NOT EXISTS system_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
   `CREATE TABLE IF NOT EXISTS vocabulary_items (
     id TEXT PRIMARY KEY,
     word TEXT NOT NULL,
