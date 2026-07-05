@@ -1,0 +1,28 @@
+services:
+  api:
+    build:
+      context: .
+      target: api
+    environment:
+      NODE_ENV: production
+      PORT: 8787
+      DATABASE_URL: file:/app/.data/local.db
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET before starting docker compose}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:9000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    volumes:
+      - api-data:/app/.data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "${WEB_PORT:-9000}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  api-data:

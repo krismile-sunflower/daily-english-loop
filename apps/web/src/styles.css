@@ -1,0 +1,225 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,500;6..12,600;6..12,700;6..12,800&display=swap");
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --ground: #fff1df;
+  --ground-quiet: #ffe9cf;
+  --surface-1: #fff9f0;
+  --surface-2: #ffffff;
+  --surface-3: #f6dfc3;
+  --surface-wash: #fbd7b6;
+  --hairline: rgba(27, 58, 71, 0.12);
+  --hairline-strong: rgba(27, 58, 71, 0.22);
+  --text: #1b3a47;
+  --muted: #5c6b7a;
+  --muted-2: #87919a;
+  --accent: #8fae6f;
+  --accent-strong: #78985a;
+  --accent-light: #58763d;
+  --accent-soft: rgba(143, 174, 111, 0.18);
+  --action: #f5867b;
+  --action-strong: #df6b60;
+  --action-soft: rgba(245, 134, 123, 0.18);
+  --lavender: #b0a5d1;
+  --warning: #d9964b;
+  --danger: #c96565;
+  --success: #6f9c63;
+  --button-on-action: #fff9f0;
+  --shell-panel: rgba(255, 249, 240, 0.72);
+  --theme-toggle-bg: rgba(255, 249, 240, 0.72);
+  --theme-toggle-active: #ffffff;
+  --progress-track: rgba(27, 58, 71, 0.1);
+  --page-glow-action: rgba(245, 134, 123, 0.16);
+  --page-glow-accent: rgba(143, 174, 111, 0.2);
+  --auth-glow-action: rgba(245, 134, 123, 0.14);
+  --auth-glow-accent: rgba(143, 174, 111, 0.2);
+  --hero-gradient: linear-gradient(135deg, #fff9f0 0%, #ffffff 54%, #ffe2c5 100%);
+  --review-gradient: linear-gradient(145deg, #ffffff 0%, #fff9f0 58%, #ffe2c5 100%);
+  --body-bg:
+    radial-gradient(circle at 14% 8%, rgba(255, 255, 255, 0.92), transparent 28rem),
+    radial-gradient(circle at 84% 0%, rgba(245, 134, 123, 0.18), transparent 34rem),
+    linear-gradient(135deg, #fff1df 0%, #fff8eb 44%, #f8dec0 100%),
+    var(--ground);
+  --shadow-soft: 0 12px 32px rgba(244, 165, 115, 0.18);
+  --shadow-lift: 0 18px 46px rgba(91, 71, 46, 0.16);
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  font-family: "Nunito Sans", ui-sans-serif, sans-serif;
+  background: var(--ground);
+}
+
+[data-theme="night"] {
+  color-scheme: dark;
+  --ground: #16241f;
+  --ground-quiet: #1c2d27;
+  --surface-1: #22342d;
+  --surface-2: #2a3d35;
+  --surface-3: #344b40;
+  --surface-wash: #263b33;
+  --hairline: rgba(250, 235, 214, 0.14);
+  --hairline-strong: rgba(250, 235, 214, 0.28);
+  --text: #fff3df;
+  --muted: #c9b9a5;
+  --muted-2: #9f927f;
+  --accent: #a9c982;
+  --accent-strong: #bbd890;
+  --accent-light: #cce7a7;
+  --accent-soft: rgba(169, 201, 130, 0.18);
+  --action: #ff9488;
+  --action-strong: #ffb0a5;
+  --action-soft: rgba(255, 148, 136, 0.18);
+  --lavender: #c9bce4;
+  --warning: #e2ad69;
+  --danger: #f09b96;
+  --success: #a9ce8d;
+  --button-on-action: #1b2b25;
+  --shell-panel: rgba(31, 47, 41, 0.76);
+  --theme-toggle-bg: rgba(31, 47, 41, 0.8);
+  --theme-toggle-active: #33483f;
+  --progress-track: rgba(250, 235, 214, 0.12);
+  --page-glow-action: rgba(255, 148, 136, 0.12);
+  --page-glow-accent: rgba(169, 201, 130, 0.12);
+  --auth-glow-action: rgba(255, 148, 136, 0.13);
+  --auth-glow-accent: rgba(169, 201, 130, 0.14);
+  --hero-gradient: linear-gradient(135deg, #22342d 0%, #2a3d35 54%, #3b332d 100%);
+  --review-gradient: linear-gradient(145deg, #253830 0%, #2a3d35 58%, #3a332d 100%);
+  --body-bg:
+    radial-gradient(circle at 14% 8%, rgba(255, 243, 223, 0.08), transparent 28rem),
+    radial-gradient(circle at 84% 0%, rgba(255, 148, 136, 0.12), transparent 34rem),
+    linear-gradient(135deg, #16241f 0%, #1e3029 48%, #2b2a24 100%),
+    var(--ground);
+  --shadow-soft: 0 12px 32px rgba(4, 10, 8, 0.26);
+  --shadow-lift: 0 18px 48px rgba(4, 10, 8, 0.34);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--ground);
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--body-bg);
+  color: var(--text);
+  font-family: "Nunito Sans", ui-sans-serif, sans-serif;
+  font-size: 16px;
+  transition: background 360ms var(--ease-soft), color 360ms var(--ease-soft);
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+p,
+h1,
+h2,
+h3 {
+  text-wrap: pretty;
+}
+
+.font-mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+::selection {
+  background: var(--action);
+  color: #fff9f0;
+}
+
+[data-theme="night"] .bg-white {
+  background-color: var(--surface-2);
+}
+
+[data-theme="night"] .bg-white\/58 {
+  background-color: color-mix(in oklab, var(--surface-2) 58%, transparent);
+}
+
+[data-theme="night"] .bg-white\/62 {
+  background-color: color-mix(in oklab, var(--surface-2) 62%, transparent);
+}
+
+[data-theme="night"] .bg-white\/64 {
+  background-color: color-mix(in oklab, var(--surface-2) 64%, transparent);
+}
+
+[data-theme="night"] .bg-white\/70 {
+  background-color: color-mix(in oklab, var(--surface-2) 70%, transparent);
+}
+
+[data-theme="night"] .bg-white\/72 {
+  background-color: color-mix(in oklab, var(--surface-2) 72%, transparent);
+}
+
+[data-theme="night"] .bg-white\/76 {
+  background-color: color-mix(in oklab, var(--surface-2) 76%, transparent);
+}
+
+[data-theme="night"] .bg-white\/78 {
+  background-color: color-mix(in oklab, var(--surface-2) 78%, transparent);
+}
+
+[data-theme="night"] .bg-white\/80 {
+  background-color: color-mix(in oklab, var(--surface-2) 80%, transparent);
+}
+
+[data-theme="night"] .bg-white\/82 {
+  background-color: color-mix(in oklab, var(--surface-2) 82%, transparent);
+}
+
+[data-theme="night"] .bg-white\/84 {
+  background-color: color-mix(in oklab, var(--surface-2) 84%, transparent);
+}
+
+[data-theme="night"] .hover\:bg-white\/50:hover,
+[data-theme="night"] .hover\:bg-white\/70:hover,
+[data-theme="night"] .focus\:bg-white:focus {
+  background-color: color-mix(in oklab, var(--surface-2) 86%, transparent);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.98);
+    opacity: 0.58;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.88;
+  }
+}
+
+.soft-breathe {
+  animation: breathe 5.6s var(--ease-soft) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "english-learning",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.1",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter './apps/*' dev",
+    "dev:web": "pnpm --filter @english-learning/web dev",
+    "dev:api": "pnpm --filter @english-learning/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "db:migrate": "pnpm --filter @english-learning/api db:migrate",
+    "db:seed": "pnpm --filter @english-learning/api db:seed",
+    "db:reset": "pnpm --filter @english-learning/api db:reset"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}

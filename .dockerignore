@@ -1,0 +1,17 @@
+.git
+.DS_Store
+**/.DS_Store
+
+node_modules
+**/node_modules
+
+dist
+**/dist
+coverage
+**/.vite
+
+.data
+.env
+.env.local
+.env.*.local
+*.log
