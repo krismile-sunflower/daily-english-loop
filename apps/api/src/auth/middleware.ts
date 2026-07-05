@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { getCookie } from "hono/cookie";
 import { db } from "../db/client";
@@ -12,6 +13,24 @@ export type AuthVariables = {
 };
 
 export const requireAuth = createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
+  const user = await requireSessionUser(c);
+  c.set("user", user);
+  c.set("userId", user.id);
+  await next();
+});
+
+export const requireAdmin = createMiddleware<{ Variables: AuthVariables }>(async (c, next) => {
+  const user = await requireSessionUser(c);
+  if (user.role !== "admin") {
+    throw new ApiError(403, "FORBIDDEN", "Admin access is required.");
+  }
+
+  c.set("user", user);
+  c.set("userId", user.id);
+  await next();
+});
+
+async function requireSessionUser(c: Context<{ Variables: AuthVariables }>) {
   const token = getCookie(c, "session");
   if (!token) {
     throw new ApiError(401, "UNAUTHENTICATED", "Please log in first.");
@@ -27,7 +46,5 @@ export const requireAuth = createMiddleware<{ Variables: AuthVariables }>(async 
     throw new ApiError(401, "UNAUTHENTICATED", "The session user no longer exists.");
   }
 
-  c.set("user", user);
-  c.set("userId", user.id);
-  await next();
-});
+  return user;
+}

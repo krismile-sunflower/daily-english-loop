@@ -243,7 +243,7 @@ function VocabularyCard({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-4xl font-extrabold tracking-normal text-[var(--text)]">{item.word}</h2>
-            <PronunciationButton vocabularyItemId={item.id} word={item.word} />
+            <PronunciationButton vocabularyItemId={item.id} word={item.word} prefetch />
             <Badge>{item.phonetic}</Badge>
             <Badge>{item.topic}</Badge>
           </div>

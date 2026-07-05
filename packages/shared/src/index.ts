@@ -3,6 +3,9 @@ import { z } from "zod";
 export const englishLevelSchema = z.enum(["A1", "A2", "B1", "B2", "C1"]);
 export type EnglishLevel = z.infer<typeof englishLevelSchema>;
 
+export const userRoleSchema = z.enum(["learner", "admin"]);
+export type UserRole = z.infer<typeof userRoleSchema>;
+
 export const courseTypeSchema = z.enum(["reading", "listening", "grammar"]);
 export type CourseType = z.infer<typeof courseTypeSchema>;
 
@@ -17,6 +20,7 @@ export const userSchema = z.object({
   email: z.string().email(),
   name: z.string(),
   level: englishLevelSchema.nullable(),
+  role: userRoleSchema,
   createdAt: z.string()
 });
 export type User = z.infer<typeof userSchema>;
@@ -223,6 +227,81 @@ export const dashboardResponseSchema = z.object({
   streakDays: z.number().int()
 });
 export type DashboardResponse = z.infer<typeof dashboardResponseSchema>;
+
+export const adminSummaryResponseSchema = z.object({
+  totals: z.object({
+    users: z.number().int(),
+    admins: z.number().int(),
+    activeToday: z.number().int(),
+    vocabularyItems: z.number().int(),
+    lessons: z.number().int(),
+    exercises: z.number().int()
+  }),
+  recentUsers: z.array(userSchema)
+});
+export type AdminSummaryResponse = z.infer<typeof adminSummaryResponseSchema>;
+
+export const adminUsersQuerySchema = z.object({
+  q: z.string().trim().optional(),
+  role: userRoleSchema.optional(),
+  level: englishLevelSchema.optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20)
+});
+export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
+
+export const adminUsersResponseSchema = z.object({
+  users: z.array(userSchema),
+  total: z.number().int(),
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  totalPages: z.number().int()
+});
+export type AdminUsersResponse = z.infer<typeof adminUsersResponseSchema>;
+
+export const adminCreateUserInputSchema = z.object({
+  email: z.string().trim().email(),
+  name: z.string().trim().min(2).max(40),
+  password: z.string().min(8).max(120),
+  level: englishLevelSchema.nullable().optional()
+});
+export type AdminCreateUserInput = z.infer<typeof adminCreateUserInputSchema>;
+
+export const adminCreateUserResponseSchema = z.object({
+  user: userSchema
+});
+export type AdminCreateUserResponse = z.infer<typeof adminCreateUserResponseSchema>;
+
+export const adminUpdateUserInputSchema = z
+  .object({
+    name: z.string().trim().min(2).max(40).optional(),
+    level: englishLevelSchema.nullable().optional()
+  })
+  .refine((input) => input.name !== undefined || input.level !== undefined, {
+    message: "At least one user field must be provided."
+  });
+export type AdminUpdateUserInput = z.infer<typeof adminUpdateUserInputSchema>;
+
+export const adminUpdateUserResponseSchema = z.object({
+  user: userSchema
+});
+export type AdminUpdateUserResponse = z.infer<typeof adminUpdateUserResponseSchema>;
+
+export const adminResetUserPasswordInputSchema = z.object({
+  password: z.string().min(8).max(120)
+});
+export type AdminResetUserPasswordInput = z.infer<typeof adminResetUserPasswordInputSchema>;
+
+export const adminResetUserPasswordResponseSchema = z.object({
+  user: userSchema
+});
+export type AdminResetUserPasswordResponse = z.infer<typeof adminResetUserPasswordResponseSchema>;
+
+export const adminDeleteUserResponseSchema = z.object({
+  ok: z.literal(true),
+  userId: z.string()
+});
+export type AdminDeleteUserResponse = z.infer<typeof adminDeleteUserResponseSchema>;
 
 export const apiErrorSchema = z.object({
   error: z.object({

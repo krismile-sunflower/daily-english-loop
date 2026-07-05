@@ -6,7 +6,10 @@ export async function playAudioUrl(audioUrl: string) {
     window.speechSynthesis?.cancel();
   }
 
-  const audio = new Audio(audioUrl);
+  const audio = new Audio();
+  audio.preload = "auto";
+  audio.setAttribute("playsinline", "true");
+  audio.src = audioUrl;
   activeAudio = audio;
   audio.addEventListener(
     "ended",
@@ -19,6 +22,7 @@ export async function playAudioUrl(audioUrl: string) {
   );
 
   try {
+    audio.load();
     await audio.play();
   } catch (error) {
     if (activeAudio === audio) {
@@ -34,11 +38,18 @@ export function speakEnglishText(text: string) {
   }
 
   stopActiveAudio();
-  window.speechSynthesis.cancel();
+  const synth = window.speechSynthesis;
+  synth.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.rate = 0.88;
-  window.speechSynthesis.speak(utterance);
+  const preferredVoice =
+    synth.getVoices().find((voice) => voice.lang === "en-US") ??
+    synth.getVoices().find((voice) => voice.lang.toLowerCase().startsWith("en"));
+  if (preferredVoice) {
+    utterance.voice = preferredVoice;
+  }
+  synth.speak(utterance);
   return true;
 }
 

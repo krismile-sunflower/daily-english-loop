@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  adminCreateUserInputSchema,
+  adminDeleteUserResponseSchema,
+  adminResetUserPasswordInputSchema,
+  adminSummaryResponseSchema,
+  adminUpdateUserInputSchema,
+  adminUsersResponseSchema,
   dashboardResponseSchema,
   englishLevelSchema,
   loginInputSchema,
@@ -89,6 +95,7 @@ describe("shared schemas", () => {
         email: "learner@example.com",
         name: "Learner",
         level: "A2",
+        role: "learner",
         createdAt: new Date().toISOString()
       },
       today: {
@@ -108,5 +115,44 @@ describe("shared schemas", () => {
     });
 
     expect(parsed.today.exercisesCompleted).toBe(5);
+  });
+
+  it("validates admin response and update schemas", () => {
+    const user = {
+      id: "u1",
+      email: "admin@example.com",
+      name: "Admin",
+      level: null,
+      role: "admin",
+      createdAt: new Date().toISOString()
+    };
+
+    const summary = adminSummaryResponseSchema.parse({
+      totals: {
+        users: 2,
+        admins: 1,
+        activeToday: 1,
+        vocabularyItems: 250,
+        lessons: 7,
+        exercises: 15
+      },
+      recentUsers: [user]
+    });
+    expect(summary.totals.admins).toBe(1);
+
+    const users = adminUsersResponseSchema.parse({
+      users: [user],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      totalPages: 1
+    });
+    expect(users.users[0]?.role).toBe("admin");
+
+    expect(adminCreateUserInputSchema.parse({ email: "learner@example.com", name: "Learner", password: "password123", level: "B1" }).level).toBe("B1");
+    expect(adminUpdateUserInputSchema.parse({ name: "Renamed", level: "B1" }).level).toBe("B1");
+    expect(adminResetUserPasswordInputSchema.parse({ password: "new-password123" }).password).toBe("new-password123");
+    expect(adminDeleteUserResponseSchema.parse({ ok: true, userId: "u1" }).ok).toBe(true);
+    expect(() => adminUpdateUserInputSchema.parse({})).toThrow();
   });
 });

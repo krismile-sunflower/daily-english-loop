@@ -8,6 +8,7 @@ import {
   Library,
   Repeat2,
   Settings,
+  ShieldCheck,
   Sunrise
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -26,8 +27,11 @@ const navItems = [
   { to: "/settings", label: "设置", icon: Settings }
 ] as const;
 
+const adminNavItem = { to: "/admin", label: "管理", icon: ShieldCheck } as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const me = useQuery({ queryKey: ["me"], queryFn: api.me });
+  const visibleNavItems = me.data?.user?.role === "admin" ? [adminNavItem, ...navItems] : navItems;
 
   return (
     <div className="min-h-dvh overflow-x-hidden bg-[var(--ground)] text-[var(--text)] lg:h-dvh lg:overflow-hidden">
@@ -49,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
 
             <nav className="grid grid-cols-3 gap-2 lg:grid-cols-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -74,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="mt-auto hidden overflow-hidden rounded-[28px] border border-[color:var(--hairline)] bg-white/76 p-5 shadow-[var(--shadow-soft)] lg:block">
               <div className="flex items-center justify-between">
-                <Badge>{formatLevel(me.data?.user?.level)}</Badge>
+                <Badge>{me.data?.user?.role === "admin" ? "管理员" : formatLevel(me.data?.user?.level)}</Badge>
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--accent-soft)]">
                   <Leaf className="h-5 w-5 text-[var(--accent-light)]" />
                 </span>

@@ -1,4 +1,13 @@
 import type {
+  AdminCreateUserInput,
+  AdminCreateUserResponse,
+  AdminDeleteUserResponse,
+  AdminResetUserPasswordInput,
+  AdminResetUserPasswordResponse,
+  AdminSummaryResponse,
+  AdminUpdateUserInput,
+  AdminUpdateUserResponse,
+  AdminUsersResponse,
   AuthResponse,
   DashboardResponse,
   Lesson,
@@ -136,6 +145,42 @@ export const api = {
     return request<PracticeSubmitResponse>("/practice/submit", {
       method: "POST",
       body: JSON.stringify(input)
+    });
+  },
+  adminSummary() {
+    return request<AdminSummaryResponse>("/admin/summary");
+  },
+  adminUsers(params?: { q?: string; role?: string; level?: string; page?: number; pageSize?: number }) {
+    const query = new URLSearchParams();
+    if (params?.q) query.set("q", params.q);
+    if (params?.role) query.set("role", params.role);
+    if (params?.level) query.set("level", params.level);
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<AdminUsersResponse>(`/admin/users${suffix}`);
+  },
+  createAdminUser(input: AdminCreateUserInput) {
+    return request<AdminCreateUserResponse>("/admin/users", {
+      method: "POST",
+      body: JSON.stringify(input)
+    });
+  },
+  updateAdminUser(userId: string, input: AdminUpdateUserInput) {
+    return request<AdminUpdateUserResponse>(`/admin/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input)
+    });
+  },
+  resetAdminUserPassword(userId: string, input: AdminResetUserPasswordInput) {
+    return request<AdminResetUserPasswordResponse>(`/admin/users/${userId}/password`, {
+      method: "PATCH",
+      body: JSON.stringify(input)
+    });
+  },
+  deleteAdminUser(userId: string) {
+    return request<AdminDeleteUserResponse>(`/admin/users/${userId}`, {
+      method: "DELETE"
     });
   }
 };

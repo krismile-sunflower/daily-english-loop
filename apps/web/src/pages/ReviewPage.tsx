@@ -61,7 +61,7 @@ export function ReviewPage() {
                   <p className="text-sm font-extrabold text-[var(--muted)]">{current.topic}</p>
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                     <h2 className="max-w-full break-words text-6xl font-extrabold tracking-normal sm:text-8xl">{current.word}</h2>
-                    <PronunciationButton vocabularyItemId={current.id} word={current.word} size="lg" />
+                    <PronunciationButton vocabularyItemId={current.id} word={current.word} size="lg" prefetch />
                   </div>
                   <p className="mt-4 text-lg font-bold text-[var(--muted)]">{current.phonetic}</p>
                 </div>

@@ -112,7 +112,7 @@ export function LoginPage() {
     mutationFn: api.login,
     onSuccess: async (data) => {
       queryClient.setQueryData(["me"], data);
-      await navigate({ to: data.user.level ? "/dashboard" : "/onboarding/level" });
+      await navigate({ to: data.user.role === "admin" ? "/admin" : data.user.level ? "/dashboard" : "/onboarding/level" });
     }
   });
 

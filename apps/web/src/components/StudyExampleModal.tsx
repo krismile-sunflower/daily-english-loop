@@ -62,7 +62,7 @@ export function StudyExampleModal({ open, item, grade, onClose }: StudyExampleMo
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <DialogTitle className="break-words text-4xl sm:text-5xl">{item.word}</DialogTitle>
-                  <PronunciationButton vocabularyItemId={item.id} word={item.word} />
+                  <PronunciationButton vocabularyItemId={item.id} word={item.word} prefetch />
                 </div>
                 <DialogDescription>{selectedGrade?.detail ?? "复习选择已保存，关闭弹框后会刷新今日新词列表。"}</DialogDescription>
               </DialogHeader>

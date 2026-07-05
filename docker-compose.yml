@@ -8,6 +8,9 @@ services:
       PORT: 8787
       DATABASE_URL: file:/app/.data/local.db
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET before starting docker compose}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL before starting docker compose}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD before starting docker compose}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:9000}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
     volumes:

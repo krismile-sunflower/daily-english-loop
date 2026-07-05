@@ -44,6 +44,7 @@ authRoutes.post("/register", async (c) => {
       name: input.name,
       passwordHash: hashPassword(input.password),
       level: null,
+      role: "learner",
       createdAt: new Date().toISOString()
     })
     .returning();

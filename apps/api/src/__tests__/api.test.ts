@@ -7,6 +7,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 const tempDir = mkdtempSync(join(tmpdir(), "english-learning-api-"));
 process.env.DATABASE_URL = `file:${join(tempDir, "test.db")}`;
 process.env.JWT_SECRET = "test-secret";
+process.env.ADMIN_EMAIL = "admin@example.com";
+process.env.ADMIN_PASSWORD = "admin-password123";
+process.env.ADMIN_NAME = "Admin User";
 
 const { app } = await import("../app");
 const { runMigrations } = await import("../db/migrate");
@@ -35,6 +38,19 @@ async function loginDemoUser() {
     body: JSON.stringify({
       email: "learner@example.com",
       password: "password123"
+    })
+  });
+  expect(loginResponse.status).toBe(200);
+  return cookieFrom(loginResponse);
+}
+
+async function loginAdminUser(email = "admin@example.com", password = "admin-password123") {
+  const loginResponse = await app.request("/api/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      email,
+      password
     })
   });
   expect(loginResponse.status).toBe(200);
@@ -176,6 +192,168 @@ describe("api learning loop", () => {
   it("rejects protected endpoints without a session", async () => {
     const response = await app.request("/api/progress/dashboard");
     expect(response.status).toBe(401);
+  });
+
+  it("initializes the admin account from env and keeps seed idempotent", async () => {
+    const adminCookie = await loginAdminUser();
+    const meResponse = await app.request("/api/auth/me", { headers: { cookie: adminCookie } });
+    const mePayload = await json(meResponse);
+    expect((mePayload.user as { role: string }).role).toBe("admin");
+
+    await seedDatabase();
+
+    const usersResponse = await app.request("/api/admin/users?q=admin@example.com&page=1&pageSize=10", {
+      headers: { cookie: adminCookie }
+    });
+    expect(usersResponse.status).toBe(200);
+    const usersPayload = await json(usersResponse);
+    expect(usersPayload.total).toBe(1);
+    expect(((usersPayload.users as Array<{ email: string; role: string }>)[0]?.role)).toBe("admin");
+  });
+
+  it("protects admin endpoints and serves summary for admins", async () => {
+    const unauthorized = await app.request("/api/admin/summary");
+    expect(unauthorized.status).toBe(401);
+
+    const learnerCookie = await loginDemoUser();
+    const forbidden = await app.request("/api/admin/summary", { headers: { cookie: learnerCookie } });
+    expect(forbidden.status).toBe(403);
+
+    const adminCookie = await loginAdminUser();
+    const summaryResponse = await app.request("/api/admin/summary", { headers: { cookie: adminCookie } });
+    expect(summaryResponse.status).toBe(200);
+    const summary = await json(summaryResponse);
+    const totals = summary.totals as { users: number; admins: number; vocabularyItems: number; lessons: number; exercises: number };
+    expect(totals.users).toBeGreaterThanOrEqual(2);
+    expect(totals.admins).toBe(1);
+    expect(totals.vocabularyItems).toBeGreaterThanOrEqual(250);
+    expect(totals.lessons).toBeGreaterThan(0);
+    expect(totals.exercises).toBeGreaterThan(0);
+    expect(summary.recentUsers).toBeInstanceOf(Array);
+  });
+
+  it("manages learner accounts with create, read, update, password reset, and delete", async () => {
+    const adminCookie = await loginAdminUser();
+    const email = `managed-${Date.now()}@example.com`;
+
+    const createResponse = await app.request("/api/admin/users", {
+      method: "POST",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({
+        email,
+        name: "Managed Learner",
+        password: "password123",
+        level: "A1"
+      })
+    });
+    expect(createResponse.status).toBe(201);
+    const createdUser = (await json(createResponse)).user as { id: string; email: string; role: string; level: string };
+    expect(createdUser.email).toBe(email);
+    expect(createdUser.role).toBe("learner");
+    expect(createdUser.level).toBe("A1");
+
+    const listResponse = await app.request("/api/admin/users?q=learner&role=learner&level=B1&page=1&pageSize=5", {
+      headers: { cookie: adminCookie }
+    });
+    expect(listResponse.status).toBe(200);
+    const listPayload = await json(listResponse);
+    const users = listPayload.users as Array<{ id: string; email: string; role: string; level: string }>;
+    expect(users.some((user) => user.email === "learner@example.com")).toBe(true);
+    expect(users.every((user) => user.role === "learner")).toBe(true);
+    expect(users.every((user) => user.level === "B1")).toBe(true);
+
+    const updateResponse = await app.request(`/api/admin/users/${createdUser.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({ name: "Renamed Learner", level: "B2" })
+    });
+    expect(updateResponse.status).toBe(200);
+    const updatePayload = await json(updateResponse);
+    expect((updatePayload.user as { name: string; level: string; role: string }).name).toBe("Renamed Learner");
+    expect((updatePayload.user as { name: string; level: string; role: string }).level).toBe("B2");
+    expect((updatePayload.user as { name: string; level: string; role: string }).role).toBe("learner");
+
+    const resetResponse = await app.request(`/api/admin/users/${createdUser.id}/password`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({ password: "new-password123" })
+    });
+    expect(resetResponse.status).toBe(200);
+    await loginAdminUser(email, "new-password123");
+
+    const deleteResponse = await app.request(`/api/admin/users/${createdUser.id}`, {
+      method: "DELETE",
+      headers: { cookie: adminCookie }
+    });
+    expect(deleteResponse.status).toBe(200);
+
+    const deletedLogin = await app.request("/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, password: "new-password123" })
+    });
+    expect(deletedLogin.status).toBe(401);
+  });
+
+  it("protects admin accounts from account management actions", async () => {
+    const adminCookie = await loginAdminUser();
+    const adminMeResponse = await app.request("/api/auth/me", { headers: { cookie: adminCookie } });
+    const adminUser = (await json(adminMeResponse)).user as { id: string };
+
+    const editAdmin = await app.request(`/api/admin/users/${adminUser.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({ name: "Edited Admin" })
+    });
+    expect(editAdmin.status).toBe(400);
+
+    const resetAdminPassword = await app.request(`/api/admin/users/${adminUser.id}/password`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json", cookie: adminCookie },
+      body: JSON.stringify({ password: "new-admin-password123" })
+    });
+    expect(resetAdminPassword.status).toBe(400);
+
+    const deleteAdmin = await app.request(`/api/admin/users/${adminUser.id}`, {
+      method: "DELETE",
+      headers: { cookie: adminCookie }
+    });
+    expect(deleteAdmin.status).toBe(400);
+  });
+
+  it("can promote an existing seeded email through admin env values", async () => {
+    const oldEmail = process.env.ADMIN_EMAIL;
+    const oldPassword = process.env.ADMIN_PASSWORD;
+    const oldName = process.env.ADMIN_NAME;
+    const email = `seed-admin-${Date.now()}@example.com`;
+
+    const registerResponse = await app.request("/api/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email,
+        name: "Future Admin",
+        password: "password123"
+      })
+    });
+    expect(registerResponse.status).toBe(201);
+
+    try {
+      process.env.ADMIN_EMAIL = email;
+      process.env.ADMIN_PASSWORD = "new-admin-password123";
+      process.env.ADMIN_NAME = "Promoted Admin";
+      await seedDatabase();
+    } finally {
+      process.env.ADMIN_EMAIL = oldEmail;
+      process.env.ADMIN_PASSWORD = oldPassword;
+      process.env.ADMIN_NAME = oldName;
+    }
+
+    const promotedCookie = await loginAdminUser(email, "new-admin-password123");
+    const meResponse = await app.request("/api/auth/me", { headers: { cookie: promotedCookie } });
+    const payload = await json(meResponse);
+    expect((payload.user as { name: string; role: string }).name).toBe("Promoted Admin");
+    expect((payload.user as { name: string; role: string }).role).toBe("admin");
   });
 
   it("serves a vocabulary library for every supported level", async () => {

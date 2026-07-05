@@ -16,7 +16,7 @@ export function HomePage() {
       void navigate({ to: "/login" });
     }
     if (me.data?.user) {
-      void navigate({ to: me.data.user.level ? "/dashboard" : "/onboarding/level" });
+      void navigate({ to: me.data.user.role === "admin" ? "/admin" : me.data.user.level ? "/dashboard" : "/onboarding/level" });
     }
   }, [me.data?.user, me.isError, navigate]);
 

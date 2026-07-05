@@ -8,6 +8,7 @@ const statements = [
     name TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     level TEXT,
+    role TEXT NOT NULL DEFAULT 'learner',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE TABLE IF NOT EXISTS vocabulary_items (
@@ -126,6 +127,7 @@ const statements = [
 ];
 
 const additiveStatements = [
+  `ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'learner'`,
   `ALTER TABLE vocabulary_examples ADD COLUMN audio_url TEXT`,
   `ALTER TABLE vocabulary_examples ADD COLUMN audio_resolved_at TEXT`,
   `ALTER TABLE vocabulary_examples ADD COLUMN audio_missing_at TEXT`

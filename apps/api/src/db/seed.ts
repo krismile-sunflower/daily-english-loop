@@ -1,4 +1,5 @@
-import { inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { db, client } from "./client";
 import { exercises, lessons, users, vocabularyItems } from "./schema";
 import { runMigrations } from "./migrate";
@@ -265,9 +266,12 @@ export async function seedDatabase() {
       name: "Demo Learner",
       passwordHash: hashPassword("password123"),
       level: "B1",
+      role: "learner",
       createdAt: new Date().toISOString()
     })
     .onConflictDoNothing();
+
+  await seedAdminUser();
 
   const vocabularyLibrary = await loadVocabularyLibrary();
   for (const batch of chunkArray(vocabularyLibrary, vocabularyUpsertBatchSize)) {
@@ -306,6 +310,48 @@ export async function seedDatabase() {
       }))
     )
     .onConflictDoNothing();
+}
+
+async function seedAdminUser() {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!email && !password) {
+    return;
+  }
+
+  if (!email || !password) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be provided together.");
+  }
+
+  if (password.length < 8) {
+    throw new Error("ADMIN_PASSWORD must be at least 8 characters.");
+  }
+
+  const name = process.env.ADMIN_NAME?.trim() || "Admin";
+  const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+
+  if (existing) {
+    await db
+      .update(users)
+      .set({
+        name,
+        passwordHash: hashPassword(password),
+        role: "admin"
+      })
+      .where(eq(users.id, existing.id));
+    return;
+  }
+
+  await db.insert(users).values({
+    id: randomUUID(),
+    email,
+    name,
+    passwordHash: hashPassword(password),
+    level: null,
+    role: "admin",
+    createdAt: new Date().toISOString()
+  });
 }
 
 function chunkArray<T>(items: T[], size: number) {

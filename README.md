@@ -45,11 +45,13 @@ cp .env.example .env
 # WEB_ORIGIN=http://your-server-ip:9000
 # WEB_PORT=9000
 # COOKIE_SECURE=false
+# ADMIN_EMAIL=admin@example.com
+# ADMIN_PASSWORD=replace-with-a-secure-admin-password
 
 docker compose up -d --build
 ```
 
-The first API start downloads the vocabulary sources and seeds the SQLite database. Do not commit `.data`; production data is kept in the Docker volume.
+The first API start downloads the vocabulary sources, seeds the SQLite database, and creates the admin account from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Do not commit `.data`; production data is kept in the Docker volume.
 
 The default Docker frontend port is `9000`, so direct testing is available at `http://your-server-ip:9000`.
 

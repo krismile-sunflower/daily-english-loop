@@ -27,6 +27,7 @@ export function toPublicUser(user: UserRow): User {
     email: user.email,
     name: user.name,
     level: user.level as EnglishLevel | null,
+    role: user.role as User["role"],
     createdAt: user.createdAt
   };
 }

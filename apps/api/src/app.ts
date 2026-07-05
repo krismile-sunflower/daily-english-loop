@@ -2,6 +2,7 @@ import { cors } from "hono/cors";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { AuthVariables } from "./auth/middleware";
+import { adminRoutes } from "./routes/admin";
 import { authRoutes } from "./routes/auth";
 import { lessonRoutes } from "./routes/lessons";
 import { practiceRoutes } from "./routes/practice";
@@ -32,6 +33,7 @@ app.use(
 
 app.get("/api/health", (c) => c.json({ ok: true }));
 app.route("/api/auth", authRoutes);
+app.route("/api/admin", adminRoutes);
 app.route("/api/vocabulary", vocabularyRoutes);
 app.route("/api/lessons", lessonRoutes);
 app.route("/api/practice", practiceRoutes);
